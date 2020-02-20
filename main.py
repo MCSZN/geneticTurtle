@@ -1,77 +1,7 @@
 import turtle
 import numpy as np
 from time import sleep, time
-
-# Screen class for screen setup
-class Screen:
-    def __init__(self):
-        self.init_screen()
-        self.init_border()
-        self.init_writer()
-
-    def init_screen(self):
-        self.screen = turtle.Screen()
-        self.screen.setup(width=660, height=660, startx=630, starty=0)
-        self.screen.tracer(0)
-        self.screen.bgcolor("white")
-        self.screen.title("Get Candy")
-
-    def init_border(self):
-        self.border = Turtle()
-        self.border.color("black")
-        self.border.pensize(3)
-        self.border.hideturtle()
-        self.border.jump(-330, -330)
-        self.border.square(660)
-
-    def init_writer(self):
-        self.writer = Turtle()
-        self.writer.color("black")
-        self.writer.hideturtle()
-
-    def update_info(self, population):
-        info_str = "Generation: {}  Best Fitness: {}".format(
-            population.gen, population.fitness
-        )
-        self.writer.clear()
-        self.writer.jump(-200, 250)
-        self.writer.write(info_str)
-
-
-# Base Turtle class
-class Turtle(turtle.Turtle):
-    def square(self, length):
-        for _ in range(4):
-            self.forward(length)
-            self.left(90)
-
-    def jump(self, x, y):
-        self.penup()
-        self.goto(x, y)
-        self.pendown()
-
-
-# Candy graphic representation
-class Candy(Turtle):
-    def __init__(self, x: int = 0, y: int = 200):
-        super().__init__()
-        self.shape("square")
-        self.shapesize(2, 2)
-        self.color("red")
-        self.jump(x, y)
-        self.limit = 20
-
-
-# Obstacle graphic representation
-class Obstacle(Turtle):
-    def __init__(self, x: int, y: int):
-        super().__init__()
-        self.shape("circle")
-        self.shapesize(2, 2)
-        self.color("black")
-        self.jump(x, y)
-        self.limit = 20
-
+from base import Screen, Turtle, Candy, Obstacle
 
 # Dot class groups functions essential to every dot
 class Dot(Turtle):
@@ -91,12 +21,12 @@ class Dot(Turtle):
         self.dead = False
         self.fitness = 0
 
-    def move(self):
+    def move(self) -> None:
         self.forward(10)
         self.right(self.steering[self.fitness])
         self.fitness += 1
 
-    def out_of_bounds(self):
+    def out_of_bounds(self) -> bool:
         if self.xcor() < -330:
             return True
         if self.xcor() > 330:
@@ -108,9 +38,14 @@ class Dot(Turtle):
         return False
 
 
-# Population class groups dots in one place and updates them when needed
 class Population(object):
     def __init__(self, size: int = 1000, lr: int = 20):
+        """Groups the dots and update the generation
+    
+        Arguments:
+            size {int} -- number of dots to spawn
+            lr {int} -- percentage by which to decrease the freedom of change in steering
+        """
         super(Population, self).__init__()
         self.dots = [Dot() for _ in range(size)]
         self.size = size
@@ -118,7 +53,12 @@ class Population(object):
         self.fitness = float("inf")
         self.lr = lr / 100
 
-    def update_gen(self, parent_dot: Dot):
+    def update_gen(self, parent_dot: Dot) -> None:
+        """Erases all current dots and spanws new ones based on winner dot
+        
+        Arguments:
+            parent_dot {Dot} -- Base dot from which to copy the steering
+        """
         self.gen += 1
         # hide dots from pop.dots
         [d.hideturtle() for d in self.dots]
@@ -130,8 +70,8 @@ class Population(object):
         # randomly shift steering for each dot
         for dot in self.dots:
             dot.steering = parent_dot.steering + np.random.randint(
-                low=int(-10 * (1 - self.lr) ** self.gen),
-                high=int(10 * (1 - self.lr) ** self.gen),
+                low=int(-50 * (1 - self.lr) ** self.gen),
+                high=int(50 * (1 - self.lr) ** self.gen),
                 size=parent_dot.steering.shape[0],
             )
 
@@ -141,15 +81,16 @@ distance = lambda dot, obj: np.sqrt(
 )
 
 
-def main():
+def game_loop():
     screen = Screen()
     population = Population()
     initial_population = len(population.dots)
     candy = Candy()
-    obstacles = [Obstacle(180, -70), Obstacle(-180, -70), Obstacle(0, 70)]
+    obstacles = [
+        Obstacle(*np.random.randint(low=-320, high=320, size=2)) for _ in range(3)
+    ]
     generation_finished = False
     deleted = 0
-
     while True:
         t0 = time()
 
@@ -176,7 +117,6 @@ def main():
                     continue
 
         if generation_finished:
-            print("Updating generation")
             population.update_gen(dot)
             generation_finished = False
             deleted = 0
@@ -191,20 +131,23 @@ def main():
             size = len(population.dots)
             deleted_now = prev_size - size
             deleted += deleted_now
-            print("Deleted ", deleted, " dots")
 
-        screen.update_info(population)
+        screen.update_info(population, deleted)
         screen.screen.update()
-        if deleted == initial_population:
-            del screen, population, initial_population
-            del candy, obstacles, generation_finished
-            del deleted
-            main()
+
         t1 = time()
 
         exe_time = t1 - t0
         if 1 / 60 - exe_time > 0:
             sleep(1 / 60 - exe_time)
+
+        if deleted == initial_population:
+            return None
+
+
+def main():
+    while True:
+        game_loop()
 
 
 if __name__ == "__main__":
