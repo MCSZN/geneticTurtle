@@ -145,10 +145,6 @@ def game_loop():
             return None
 
 
-def main():
+if __name__ == "__main__":
     while True:
         game_loop()
-
-
-if __name__ == "__main__":
-    main()
