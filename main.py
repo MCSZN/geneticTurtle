@@ -70,8 +70,8 @@ class Population(object):
         # randomly shift steering for each dot
         for dot in self.dots:
             dot.steering = parent_dot.steering + np.random.randint(
-                low=int(-50 * (1 - self.lr) ** self.gen),
-                high=int(50 * (1 - self.lr) ** self.gen),
+                low=int(-15 * (1 - self.lr) ** self.gen),
+                high=int(15 * (1 - self.lr) ** self.gen),
                 size=parent_dot.steering.shape[0],
             )
 
