@@ -87,7 +87,7 @@ def game_loop():
     initial_population = len(population.dots)
     candy = Candy()
     obstacles = [
-        Obstacle(*np.random.randint(low=-320, high=320, size=2)) for _ in range(3)
+        Obstacle(-100, 150), Obstacle(100, 150)
     ]
     generation_finished = False
     deleted = 0
