@@ -17,7 +17,7 @@ class Dot(Turtle):
         self.setheading(90)
         # behavior settings
         self.speed(0)
-        self.steering = np.random.randint(low=-90, high=90, size=steps)
+        self.steering = np.random.randint(low=-30, high=30, size=steps)
         self.dead = False
         self.fitness = 0
 
